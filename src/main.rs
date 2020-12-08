@@ -10,10 +10,6 @@ use std::io::prelude::*;
 /// The engine.cfg file contains 980 bytes.
 const ENGINE_CFG_LEN: usize = 980;
 
-// Serde can by default only handle arrays with up to 32 elements. This adds
-// arrays for the length we need.
-big_array! { BigArray; ENGINE_CFG_LEN }
-
 /// Only the first 197 bytes of the fixed engine.cfg file has anything
 /// useful in it. The rest is zero.
 const PARTIAL_FIXED_ENGINE_CFG_LEN: usize = 197;
@@ -48,20 +44,46 @@ const PARTIAL_FIXED_ENGINE_CFG: [u8; PARTIAL_FIXED_ENGINE_CFG_LEN] = [
     0x01, 0x00, 0x00, 0x00, 0x01
 ];
 
+const SIZE_OF_U16: usize = 2; // std::mem::size_of<u16>() not working yet
+const RESOLUTION_X_LEN: usize = SIZE_OF_U16;
+const RESOLUTION_Y_LEN: usize = SIZE_OF_U16;
+
+// The field offsets were found through reverse engineering.
+const OFFSET_FIELD0: usize = 0;
+const OFFSET_RESOLUTION_X: usize = 4;
+const OFFSET_FIELD1: usize = OFFSET_RESOLUTION_X + RESOLUTION_X_LEN;
+const OFFSET_RESOLUTION_Y: usize = 8;
+const OFFSET_FIELD2: usize = OFFSET_RESOLUTION_Y + RESOLUTION_Y_LEN;
+
+const FIELD0_LEN: usize = OFFSET_RESOLUTION_X - OFFSET_FIELD0;
+const FIELD1_LEN: usize = OFFSET_RESOLUTION_Y - OFFSET_FIELD1;
+const FIELD2_LEN: usize = ENGINE_CFG_LEN - OFFSET_FIELD2;
+
+// Serde can by default only handle arrays with up to 32 elements. This adds
+// arrays for the length we need.
+big_array! { BigArray; FIELD2_LEN }
+
 /// Contains the data for the engine.cfg file.
+///
+/// The fields will be split up into more named fields as they are reverse
+/// engineered. A field with a number is an unknown field. The numbering is
+/// subject to change.
 #[derive(Serialize, Deserialize)]
 struct Engine {
-    // Put everything into one field for now. Later split up into more named
-    // fields as the format is reverse engineered.
+    field0: [u8; FIELD0_LEN],
+    resolution_x: u16,
+    field1: [u8; FIELD1_LEN],
+    resolution_y: u16,
     #[serde(with = "BigArray")]
-    field0: [u8; ENGINE_CFG_LEN],
+    field2: [u8; FIELD2_LEN],
 }
 
 impl Engine {
     fn new() -> Self {
-        Self {
-            field0: Self::fixed_data(),
-        }
+        let fixed_data = Engine::fixed_data();
+        let engine: Engine = bincode::deserialize(&fixed_data[..]).unwrap();
+
+        engine
     }
 
     fn fixed_data() -> [u8; ENGINE_CFG_LEN] {
@@ -86,6 +108,8 @@ fn main() -> std::io::Result<()> {
 
 #[cfg(test)]
 mod tests {
+    use std::assert_eq;
+
     use super::*;
 
     #[test]
@@ -107,5 +131,22 @@ mod tests {
         assert_eq!(serialized[0..PARTIAL_FIXED_ENGINE_CFG_LEN], PARTIAL_FIXED_ENGINE_CFG);
         // The rest should be zeroes
         assert!(serialized.iter().skip(PARTIAL_FIXED_ENGINE_CFG_LEN).all(|item| *item == 0));
+    }
+
+    #[test]
+    fn deserialize_fixed() {
+        let fixed_data = Engine::fixed_data();
+        let engine: Engine = bincode::deserialize(&fixed_data[..]).unwrap();
+        // You can check these values in the game's settings
+        assert_eq!(engine.resolution_x, 800);
+        assert_eq!(engine.resolution_y, 600);
+    }
+
+    #[test]
+    fn field_ordering() {
+        assert!(OFFSET_FIELD0 < OFFSET_RESOLUTION_X);
+        assert!(OFFSET_RESOLUTION_X < OFFSET_FIELD1);
+        assert!(OFFSET_FIELD1 < OFFSET_RESOLUTION_Y);
+        assert!(OFFSET_RESOLUTION_Y < OFFSET_FIELD2);
     }
 }
