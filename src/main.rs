@@ -102,7 +102,7 @@ mod tests {
     fn serialize_fixed() {
         let engine = Engine::new();
         let serialized: Vec<u8> = bincode::serialize(&engine).unwrap();
-        //
+        // The first part should be useful data
         assert_eq!(serialized.len(), ENGINE_CFG_LEN);
         assert_eq!(serialized[0..PARTIAL_FIXED_ENGINE_CFG_LEN], PARTIAL_FIXED_ENGINE_CFG);
         // The rest should be zeroes
