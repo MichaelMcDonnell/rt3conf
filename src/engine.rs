@@ -36,18 +36,18 @@ const PARTIAL_FIXED_ENGINE_CFG: [u8; PARTIAL_FIXED_ENGINE_CFG_LEN] = [
 ];
 
 const SIZE_OF_U16: usize = 2; // std::mem::size_of<u16>() not working yet
-const RESOLUTION_X_LEN: usize = SIZE_OF_U16;
-const RESOLUTION_Y_LEN: usize = SIZE_OF_U16;
+const WIDTH_LEN: usize = SIZE_OF_U16;
+const HEIGHT_LEN: usize = SIZE_OF_U16;
 
 // The field offsets were found through reverse engineering.
 const OFFSET_FIELD0: usize = 0;
-const OFFSET_RESOLUTION_X: usize = 4;
-const OFFSET_FIELD1: usize = OFFSET_RESOLUTION_X + RESOLUTION_X_LEN;
-const OFFSET_RESOLUTION_Y: usize = 8;
-const OFFSET_FIELD2: usize = OFFSET_RESOLUTION_Y + RESOLUTION_Y_LEN;
+const OFFSET_WIDTH: usize = 4;
+const OFFSET_FIELD1: usize = OFFSET_WIDTH + WIDTH_LEN;
+const OFFSET_HEIGHT: usize = 8;
+const OFFSET_FIELD2: usize = OFFSET_HEIGHT + HEIGHT_LEN;
 
-const FIELD0_LEN: usize = OFFSET_RESOLUTION_X - OFFSET_FIELD0;
-const FIELD1_LEN: usize = OFFSET_RESOLUTION_Y - OFFSET_FIELD1;
+const FIELD0_LEN: usize = OFFSET_WIDTH - OFFSET_FIELD0;
+const FIELD1_LEN: usize = OFFSET_HEIGHT - OFFSET_FIELD1;
 const FIELD2_LEN: usize = ENGINE_CFG_LEN - OFFSET_FIELD2;
 
 // Serde can by default only handle arrays with up to 32 elements. This adds
@@ -62,9 +62,9 @@ big_array! { BigArray; FIELD2_LEN }
 #[derive(Serialize, Deserialize)]
 pub struct Engine {
     field0: [u8; FIELD0_LEN],
-    resolution_x: u16,
+    width: u16,
     field1: [u8; FIELD1_LEN],
-    resolution_y: u16,
+    height: u16,
     #[serde(with = "BigArray")]
     field2: [u8; FIELD2_LEN],
 }
@@ -88,6 +88,14 @@ impl Engine {
 
     pub fn serialize(&self) -> Vec<u8> {
         bincode::serialize(&self).unwrap()
+    }
+
+    pub fn set_height(&mut self, height: u16) {
+        self.height = height;
+    }
+
+    pub fn set_width(&mut self, width: u16) {
+        self.width = width;
     }
 }
 
@@ -123,15 +131,15 @@ mod tests {
         let fixed_data = Engine::fixed_data();
         let engine: Engine = bincode::deserialize(&fixed_data[..]).unwrap();
         // You can check these values in the game's settings
-        assert_eq!(engine.resolution_x, 800);
-        assert_eq!(engine.resolution_y, 600);
+        assert_eq!(engine.width, 800);
+        assert_eq!(engine.height, 600);
     }
 
     #[test]
     fn field_ordering() {
-        assert!(OFFSET_FIELD0 < OFFSET_RESOLUTION_X);
-        assert!(OFFSET_RESOLUTION_X < OFFSET_FIELD1);
-        assert!(OFFSET_FIELD1 < OFFSET_RESOLUTION_Y);
-        assert!(OFFSET_RESOLUTION_Y < OFFSET_FIELD2);
+        assert!(OFFSET_FIELD0 < OFFSET_WIDTH);
+        assert!(OFFSET_WIDTH < OFFSET_FIELD1);
+        assert!(OFFSET_FIELD1 < OFFSET_HEIGHT);
+        assert!(OFFSET_HEIGHT < OFFSET_FIELD2);
     }
 }
