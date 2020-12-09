@@ -22,6 +22,9 @@ struct Opt {
     /// Set screen resolution width
     #[structopt(short = "x", long = "width", default_value = "800")]
     width: u16,
+    /// Enables hardware hardware texture and lighting
+    #[structopt(short = "t", long = "hardware-texture-and-lighting")]
+    hardware_tnl: bool,
 }
 
 fn main() -> std::io::Result<()> {
@@ -33,6 +36,7 @@ fn main() -> std::io::Result<()> {
     // Set screen resolution
     engine.set_height(opt.height);
     engine.set_width(opt.width);
+    engine.set_disable_hardware_tnl(!opt.hardware_tnl);
 
     // Serialize the engine and write it to disk
     let serialized: Vec<u8> = engine.serialize();

@@ -38,6 +38,7 @@ const PARTIAL_FIXED_ENGINE_CFG: [u8; PARTIAL_FIXED_ENGINE_CFG_LEN] = [
 const SIZE_OF_U16: usize = 2; // std::mem::size_of<u16>() not working yet
 const WIDTH_LEN: usize = SIZE_OF_U16;
 const HEIGHT_LEN: usize = SIZE_OF_U16;
+const DISABLE_HARDWARE_TNL_LEN: usize = 1; // std::mem::size_of<bool>() not working yet
 
 // The field offsets were found through reverse engineering.
 const OFFSET_FIELD0: usize = 0;
@@ -45,14 +46,17 @@ const OFFSET_WIDTH: usize = 4;
 const OFFSET_FIELD1: usize = OFFSET_WIDTH + WIDTH_LEN;
 const OFFSET_HEIGHT: usize = 8;
 const OFFSET_FIELD2: usize = OFFSET_HEIGHT + HEIGHT_LEN;
+const OFFSET_DISABLE_HARDWARE_TNL: usize = 196;
+const OFFSET_FIELD3: usize = OFFSET_DISABLE_HARDWARE_TNL + DISABLE_HARDWARE_TNL_LEN;
 
 const FIELD0_LEN: usize = OFFSET_WIDTH - OFFSET_FIELD0;
 const FIELD1_LEN: usize = OFFSET_HEIGHT - OFFSET_FIELD1;
-const FIELD2_LEN: usize = ENGINE_CFG_LEN - OFFSET_FIELD2;
+const FIELD2_LEN: usize = OFFSET_DISABLE_HARDWARE_TNL - OFFSET_FIELD2;
+const FIELD3_LEN: usize = ENGINE_CFG_LEN - OFFSET_FIELD3;
 
 // Serde can by default only handle arrays with up to 32 elements. This adds
-// arrays for the length we need.
-big_array! { BigArray; FIELD2_LEN }
+// handling of arrays for the lengths we need.
+big_array! { BigArray; FIELD2_LEN, FIELD3_LEN }
 
 /// Contains the data for the engine.cfg file.
 ///
@@ -67,6 +71,9 @@ pub struct Engine {
     height: u16,
     #[serde(with = "BigArray")]
     field2: [u8; FIELD2_LEN],
+    disable_hardware_tnl: bool,
+    #[serde(with = "BigArray")]
+    field3: [u8; FIELD3_LEN],
 }
 
 impl Engine {
@@ -97,6 +104,10 @@ impl Engine {
     pub fn set_width(&mut self, width: u16) {
         self.width = width;
     }
+
+    pub fn set_disable_hardware_tnl(&mut self, disable_hardware_tnl: bool) {
+        self.disable_hardware_tnl = disable_hardware_tnl;
+    } 
 }
 
 #[cfg(test)]
@@ -133,6 +144,24 @@ mod tests {
         // You can check these values in the game's settings
         assert_eq!(engine.width, 800);
         assert_eq!(engine.height, 600);
+        assert!(engine.disable_hardware_tnl);
+    }
+
+    #[test]
+    fn non_default_values() {
+        let mut engine: Engine = Engine::new();
+        
+        engine.set_height(1080);
+        engine.set_width(1920);
+        engine.set_disable_hardware_tnl(false);
+
+        // Round-trip serialization to check values are stored and read correctly
+        let serialized: Vec<u8> = engine.serialize();
+        let deserialized: Engine = bincode::deserialize(&serialized).unwrap();
+
+        assert_eq!(deserialized.height, 1080);
+        assert_eq!(deserialized.width, 1920);
+        assert!(!deserialized.disable_hardware_tnl);
     }
 
     #[test]
@@ -141,5 +170,7 @@ mod tests {
         assert!(OFFSET_WIDTH < OFFSET_FIELD1);
         assert!(OFFSET_FIELD1 < OFFSET_HEIGHT);
         assert!(OFFSET_HEIGHT < OFFSET_FIELD2);
+        assert!(OFFSET_FIELD2 < OFFSET_DISABLE_HARDWARE_TNL);
+        assert!(OFFSET_DISABLE_HARDWARE_TNL < OFFSET_FIELD3);
     }
 }
