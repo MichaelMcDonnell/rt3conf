@@ -15,16 +15,18 @@ use engine::Engine;
 #[derive(Debug, StructOpt)]
 #[structopt(name = "rt3conf", about = "Create configuration files for the game Railroad Tycoon 3.")]
 struct Opt {
-    /// Set screen resolution height
+    /// Screen resolution height
     // The 'h' is already used by the help parameter.
     #[structopt(short = "y", long = "height", default_value = "600")]
     height: u16,
-    /// Set screen resolution width
+    /// Screen resolution width
     #[structopt(short = "x", long = "width", default_value = "800")]
     width: u16,
-    /// Enables hardware hardware texture and lighting
+    /// Hardware texture and lighting (T & L) [default: false]
+    // I want to explicitly set values no matter the defaults which can be done
+    // by using an `Option` instead, e.g. "rt3conf -t false".
     #[structopt(short = "t", long = "hardware-texture-and-lighting")]
-    hardware_tnl: bool,
+    hardware_tnl: Option<bool>,
 }
 
 fn main() -> std::io::Result<()> {
@@ -36,7 +38,9 @@ fn main() -> std::io::Result<()> {
     // Set screen resolution
     engine.set_height(opt.height);
     engine.set_width(opt.width);
-    engine.set_disable_hardware_tnl(!opt.hardware_tnl);
+    if let Some(t) = opt.hardware_tnl {
+        engine.set_disable_hardware_tnl(!t);
+    }
 
     // Serialize the engine and write it to disk
     let serialized: Vec<u8> = engine.serialize();
