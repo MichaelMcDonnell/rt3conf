@@ -18,6 +18,9 @@ struct Opt {
     /// Accelerated mouse [default: true]
     #[structopt(short = "a", long = "accelerated-mouse")]
     accelerated_mouse: Option<bool>,
+    /// Full screen [default: true]
+    #[structopt(short = "f", long = "full-screen")]
+    full_screen: Option<bool>,
     /// Hardware texture and lighting (T & L) [default: false]
     // I want to explicitly set values no matter the defaults which can be done
     // by using an `Option` instead, e.g. "rt3conf -t false".
@@ -40,6 +43,9 @@ fn main() -> std::io::Result<()> {
 
     if let Some(a) = opt.accelerated_mouse {
         engine.set_accelerated_mouse(a);
+    }
+    if let Some(f) = opt.full_screen {
+        engine.set_full_screen(f);
     }
     if let Some(t) = opt.hardware_tnl {
         engine.set_disable_hardware_tnl(!t);
