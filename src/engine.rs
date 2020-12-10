@@ -35,10 +35,12 @@ const PARTIAL_FIXED_ENGINE_CFG: [u8; PARTIAL_FIXED_ENGINE_CFG_LEN] = [
     0x01, 0x00, 0x00, 0x00, 0x01
 ];
 
+const SIZE_OF_BOOL: usize = 1; // std::mem::size_of<bool>() not working yet
 const SIZE_OF_U16: usize = 2; // std::mem::size_of<u16>() not working yet
 const WIDTH_LEN: usize = SIZE_OF_U16;
 const HEIGHT_LEN: usize = SIZE_OF_U16;
-const DISABLE_HARDWARE_TNL_LEN: usize = 1; // std::mem::size_of<bool>() not working yet
+const DISABLE_ACCELERATED_MOUSE_LEN: usize = SIZE_OF_BOOL;
+const DISABLE_HARDWARE_TNL_LEN: usize = SIZE_OF_BOOL;
 
 // The field offsets were found through reverse engineering.
 const OFFSET_FIELD0: usize = 0;
@@ -46,17 +48,20 @@ const OFFSET_WIDTH: usize = 4;
 const OFFSET_FIELD1: usize = OFFSET_WIDTH + WIDTH_LEN;
 const OFFSET_HEIGHT: usize = 8;
 const OFFSET_FIELD2: usize = OFFSET_HEIGHT + HEIGHT_LEN;
+const OFFSET_DISABLE_ACCELERATED_MOUSE: usize = 184;
+const OFFSET_FIELD3: usize = OFFSET_DISABLE_ACCELERATED_MOUSE + DISABLE_ACCELERATED_MOUSE_LEN;
 const OFFSET_DISABLE_HARDWARE_TNL: usize = 196;
-const OFFSET_FIELD3: usize = OFFSET_DISABLE_HARDWARE_TNL + DISABLE_HARDWARE_TNL_LEN;
+const OFFSET_FIELD4: usize = OFFSET_DISABLE_HARDWARE_TNL + DISABLE_HARDWARE_TNL_LEN;
 
 const FIELD0_LEN: usize = OFFSET_WIDTH - OFFSET_FIELD0;
 const FIELD1_LEN: usize = OFFSET_HEIGHT - OFFSET_FIELD1;
-const FIELD2_LEN: usize = OFFSET_DISABLE_HARDWARE_TNL - OFFSET_FIELD2;
-const FIELD3_LEN: usize = ENGINE_CFG_LEN - OFFSET_FIELD3;
+const FIELD2_LEN: usize = OFFSET_DISABLE_ACCELERATED_MOUSE - OFFSET_FIELD2;
+const FIELD3_LEN: usize = OFFSET_DISABLE_HARDWARE_TNL - OFFSET_FIELD3;
+const FIELD4_LEN: usize = ENGINE_CFG_LEN - OFFSET_FIELD4;
 
 // Serde can by default only handle arrays with up to 32 elements. This adds
 // handling of arrays for the lengths we need.
-big_array! { BigArray; FIELD2_LEN, FIELD3_LEN }
+big_array! { BigArray; FIELD2_LEN, FIELD4_LEN }
 
 /// Contains the data for the engine.cfg file.
 ///
@@ -71,9 +76,11 @@ pub struct Engine {
     height: u16,
     #[serde(with = "BigArray")]
     field2: [u8; FIELD2_LEN],
+    disable_accelerated_mouse: bool,
+    field3: [u8; FIELD3_LEN],
     disable_hardware_tnl: bool,
     #[serde(with = "BigArray")]
-    field3: [u8; FIELD3_LEN],
+    field4: [u8; FIELD4_LEN],
 }
 
 impl Engine {
@@ -97,6 +104,16 @@ impl Engine {
         bincode::serialize(&self).unwrap()
     }
 
+    pub fn set_accelerated_mouse(&mut self, accelerated_mouse: bool) {
+        // The menu shows "Accelerated Mouse" but the disabled state is stored,
+        // i.e. 1 is stored when disabled and 0 when enabled.
+        self.disable_accelerated_mouse = !accelerated_mouse;
+    }
+
+    pub fn set_disable_hardware_tnl(&mut self, disable_hardware_tnl: bool) {
+        self.disable_hardware_tnl = disable_hardware_tnl;
+    }
+
     pub fn set_height(&mut self, height: u16) {
         self.height = height;
     }
@@ -104,10 +121,6 @@ impl Engine {
     pub fn set_width(&mut self, width: u16) {
         self.width = width;
     }
-
-    pub fn set_disable_hardware_tnl(&mut self, disable_hardware_tnl: bool) {
-        self.disable_hardware_tnl = disable_hardware_tnl;
-    } 
 }
 
 #[cfg(test)]
@@ -151,17 +164,19 @@ mod tests {
     fn non_default_values() {
         let mut engine: Engine = Engine::new();
         
+        engine.set_accelerated_mouse(false);
+        engine.set_disable_hardware_tnl(false);
         engine.set_height(1080);
         engine.set_width(1920);
-        engine.set_disable_hardware_tnl(false);
 
         // Round-trip serialization to check values are stored and read correctly
         let serialized: Vec<u8> = engine.serialize();
         let deserialized: Engine = bincode::deserialize(&serialized).unwrap();
 
+        assert!(deserialized.disable_accelerated_mouse);
+        assert!(!deserialized.disable_hardware_tnl);
         assert_eq!(deserialized.height, 1080);
         assert_eq!(deserialized.width, 1920);
-        assert!(!deserialized.disable_hardware_tnl);
     }
 
     #[test]
@@ -170,7 +185,9 @@ mod tests {
         assert!(OFFSET_WIDTH < OFFSET_FIELD1);
         assert!(OFFSET_FIELD1 < OFFSET_HEIGHT);
         assert!(OFFSET_HEIGHT < OFFSET_FIELD2);
-        assert!(OFFSET_FIELD2 < OFFSET_DISABLE_HARDWARE_TNL);
-        assert!(OFFSET_DISABLE_HARDWARE_TNL < OFFSET_FIELD3);
+        assert!(OFFSET_FIELD2 < OFFSET_DISABLE_ACCELERATED_MOUSE);
+        assert!(OFFSET_DISABLE_ACCELERATED_MOUSE < OFFSET_FIELD3);
+        assert!(OFFSET_FIELD3 < OFFSET_DISABLE_HARDWARE_TNL);
+        assert!(OFFSET_DISABLE_HARDWARE_TNL < OFFSET_FIELD4);
     }
 }
