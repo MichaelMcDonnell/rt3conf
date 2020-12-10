@@ -138,7 +138,6 @@ impl Engine {
 #[cfg(test)]
 mod tests {
     use std::assert_eq;
-
     use super::*;
 
     #[test]
@@ -226,10 +225,20 @@ mod tests {
 
     #[test]
     fn fields_total_length() {
-        let total_len = FIELD0_LEN + WIDTH_LEN + FIELD1_LEN + SIZE_OF_U16
-                              + FIELD2_LEN + FULL_SCREEN_LEN + FIELD3_LEN
-                              + DISABLE_ACCELERATED_MOUSE_LEN + FIELD4_LEN
-                              + DISABLE_HARDWARE_TNL_LEN + FIELD5_LEN;
+        let field_lengths: Vec<usize> = vec![
+            FIELD0_LEN,
+            WIDTH_LEN,
+            FIELD1_LEN,
+            HEIGHT_LEN,
+            FIELD2_LEN,
+            FULL_SCREEN_LEN,
+            FIELD3_LEN,
+            DISABLE_ACCELERATED_MOUSE_LEN,
+            FIELD4_LEN,
+            DISABLE_HARDWARE_TNL_LEN,
+            FIELD5_LEN,
+        ];
+        let total_len: usize = field_lengths.iter().sum();
         assert_eq!(total_len, ENGINE_CFG_LEN)
     }
 }
