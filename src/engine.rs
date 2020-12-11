@@ -39,7 +39,9 @@ const SIZE_OF_BOOL: usize = 1; // std::mem::size_of<bool>() not working yet
 const SIZE_OF_U16: usize = 2; // std::mem::size_of<u16>() not working yet
 
 const DISABLE_ACCELERATED_MOUSE_LEN: usize = SIZE_OF_BOOL;
+#[cfg(test)]
 const FULL_SCREEN_LEN: usize = SIZE_OF_BOOL;
+const FONT_SHADOWS_LEN: usize = SIZE_OF_BOOL;
 const DISABLE_HARDWARE_TNL_LEN: usize = SIZE_OF_BOOL;
 const WIDTH_LEN: usize = SIZE_OF_U16;
 const HEIGHT_LEN: usize = SIZE_OF_U16;
@@ -51,7 +53,8 @@ const OFFSET_FIELD1: usize = OFFSET_WIDTH + WIDTH_LEN;
 const OFFSET_HEIGHT: usize = 8;
 const OFFSET_FIELD2: usize = OFFSET_HEIGHT + HEIGHT_LEN;
 const OFFSET_FULL_SCREEN: usize = 16;
-const OFFSET_FIELD3: usize = OFFSET_FULL_SCREEN + FULL_SCREEN_LEN;
+const OFFSET_FONT_SHADOWS: usize = OFFSET_FULL_SCREEN + 1; // 17
+const OFFSET_FIELD3: usize = OFFSET_FONT_SHADOWS + FONT_SHADOWS_LEN;
 const OFFSET_DISABLE_ACCELERATED_MOUSE: usize = 184;
 const OFFSET_FIELD4: usize = OFFSET_DISABLE_ACCELERATED_MOUSE + DISABLE_ACCELERATED_MOUSE_LEN;
 const OFFSET_DISABLE_HARDWARE_TNL: usize = 196;
@@ -82,6 +85,7 @@ pub struct Engine {
     height: u16,
     field2: [u8; FIELD2_LEN],
     full_screen: bool,
+    font_shadows: bool,
     #[serde(with = "BigArray")]
     field3: [u8; FIELD3_LEN],
     disable_accelerated_mouse: bool,
@@ -116,6 +120,10 @@ impl Engine {
         // The menu shows "Accelerated Mouse" but the disabled state is stored,
         // i.e. 1 is stored when disabled and 0 when enabled.
         self.disable_accelerated_mouse = !accelerated_mouse;
+    }
+
+    pub fn set_font_shadows(&mut self, font_shadows: bool) {
+        self.font_shadows = font_shadows;
     }
 
     pub fn set_full_screen(&mut self, full_screen: bool) {
@@ -167,6 +175,7 @@ mod tests {
         let engine: Engine = bincode::deserialize(&fixed_data[..]).unwrap();
         // You can check these values in the game's settings
         assert!(!engine.disable_accelerated_mouse);
+        assert!(engine.font_shadows);
         assert!(engine.full_screen);
         assert!(engine.disable_hardware_tnl);
         assert_eq!(engine.height, 600);
@@ -178,6 +187,7 @@ mod tests {
         let mut engine: Engine = Engine::new();
         
         engine.set_accelerated_mouse(false);
+        engine.set_font_shadows(false);
         engine.set_full_screen(false);
         engine.set_disable_hardware_tnl(false);
         engine.set_height(1080);
@@ -188,6 +198,7 @@ mod tests {
         let deserialized: Engine = bincode::deserialize(&serialized).unwrap();
 
         assert!(deserialized.disable_accelerated_mouse);
+        assert!(!deserialized.font_shadows);
         assert!(!deserialized.full_screen);
         assert!(!deserialized.disable_hardware_tnl);
         assert_eq!(deserialized.height, 1080);
@@ -201,7 +212,8 @@ mod tests {
         assert!(OFFSET_FIELD1 < OFFSET_HEIGHT);
         assert!(OFFSET_HEIGHT < OFFSET_FIELD2);
         assert!(OFFSET_FIELD2 < OFFSET_FULL_SCREEN);
-        assert!(OFFSET_FULL_SCREEN < OFFSET_FIELD3);
+        assert!(OFFSET_FULL_SCREEN < OFFSET_FONT_SHADOWS);
+        assert!(OFFSET_FONT_SHADOWS < OFFSET_FIELD3);
         assert!(OFFSET_FIELD3 < OFFSET_DISABLE_ACCELERATED_MOUSE);
         assert!(OFFSET_DISABLE_ACCELERATED_MOUSE < OFFSET_FIELD4);
         assert!(OFFSET_FIELD4 < OFFSET_DISABLE_HARDWARE_TNL);
@@ -215,7 +227,8 @@ mod tests {
         assert_eq!(OFFSET_FIELD1 + FIELD1_LEN, OFFSET_HEIGHT);
         assert_eq!(OFFSET_HEIGHT + HEIGHT_LEN, OFFSET_FIELD2);
         assert_eq!(OFFSET_FIELD2 + FIELD2_LEN, OFFSET_FULL_SCREEN);
-        assert_eq!(OFFSET_FULL_SCREEN + FULL_SCREEN_LEN, OFFSET_FIELD3);
+        assert_eq!(OFFSET_FULL_SCREEN + FULL_SCREEN_LEN, OFFSET_FONT_SHADOWS);
+        assert_eq!(OFFSET_FONT_SHADOWS + FONT_SHADOWS_LEN, OFFSET_FIELD3);
         assert_eq!(OFFSET_FIELD3 + FIELD3_LEN, OFFSET_DISABLE_ACCELERATED_MOUSE);
         assert_eq!(OFFSET_DISABLE_ACCELERATED_MOUSE + DISABLE_ACCELERATED_MOUSE_LEN, OFFSET_FIELD4);
         assert_eq!(OFFSET_FIELD4 + FIELD4_LEN, OFFSET_DISABLE_HARDWARE_TNL);
@@ -232,6 +245,7 @@ mod tests {
             HEIGHT_LEN,
             FIELD2_LEN,
             FULL_SCREEN_LEN,
+            FONT_SHADOWS_LEN,
             FIELD3_LEN,
             DISABLE_ACCELERATED_MOUSE_LEN,
             FIELD4_LEN,

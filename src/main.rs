@@ -18,6 +18,9 @@ struct Opt {
     /// Accelerated mouse [default: true]
     #[structopt(short = "a", long = "accelerated-mouse")]
     accelerated_mouse: Option<bool>,
+    /// Font shadows [default: true]
+    #[structopt(short = "s", long = "font-shadows")]
+    font_shadows: Option<bool>,
     /// Full screen [default: true]
     #[structopt(short = "f", long = "full-screen")]
     full_screen: Option<bool>,
@@ -43,6 +46,9 @@ fn main() -> std::io::Result<()> {
 
     if let Some(a) = opt.accelerated_mouse {
         engine.set_accelerated_mouse(a);
+    }
+    if let Some(s) = opt.font_shadows {
+        engine.set_font_shadows(s);
     }
     if let Some(f) = opt.full_screen {
         engine.set_full_screen(f);
