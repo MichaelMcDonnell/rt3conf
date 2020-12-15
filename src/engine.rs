@@ -1,13 +1,13 @@
 /// The engine.cfg file contains 980 bytes.
 const ENGINE_CFG_LEN: usize = 980;
 
-/// Only the first 197 bytes of the fixed engine.cfg file has anything
+/// Only the first 201 bytes of the engine.cfg file seems to have anything
 /// useful in it. The rest is zero.
-const PARTIAL_FIXED_ENGINE_CFG_LEN: usize = 197;
+const USED_ENGINE_CFG_LEN: usize = 201;
 
-/// Only the first 197 bytes of the fixed engine.cfg file has anything
+/// Only the first 201 bytes of the engine.cfg file seems to have anything
 /// useful in it. The rest is zero.
-const PARTIAL_FIXED_ENGINE_CFG: [u8; PARTIAL_FIXED_ENGINE_CFG_LEN] = [
+const PARTIAL_FIXED_ENGINE_CFG: [u8; USED_ENGINE_CFG_LEN] = [
     0x1B, 0x04, 0x00, 0x00, 0x20, 0x03, 0x00, 0x00,
     0x58, 0x02, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00,
     0x01, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
@@ -32,7 +32,8 @@ const PARTIAL_FIXED_ENGINE_CFG: [u8; PARTIAL_FIXED_ENGINE_CFG_LEN] = [
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x02, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x01, 0x00, 0x00, 0x00, 0x01
+    0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+    0x00,
 ];
 
 const SIZE_OF_BOOL: usize = 1; // std::mem::size_of<bool>() not working yet
@@ -153,9 +154,9 @@ mod tests {
         let fixed_data = Engine::fixed_data();
         assert_eq!(fixed_data.len(), ENGINE_CFG_LEN);
         // The first part should be useful data
-        assert_eq!(fixed_data[0..PARTIAL_FIXED_ENGINE_CFG_LEN], PARTIAL_FIXED_ENGINE_CFG);
+        assert_eq!(fixed_data[0..USED_ENGINE_CFG_LEN], PARTIAL_FIXED_ENGINE_CFG);
         // The rest should be zeroes
-        assert!(fixed_data.iter().skip(PARTIAL_FIXED_ENGINE_CFG_LEN).all(|item| *item == 0));
+        assert!(fixed_data.iter().skip(USED_ENGINE_CFG_LEN).all(|item| *item == 0));
     }
 
     #[test]
@@ -164,9 +165,9 @@ mod tests {
         let serialized: Vec<u8> = bincode::serialize(&engine).unwrap();
         // The first part should be useful data
         assert_eq!(serialized.len(), ENGINE_CFG_LEN);
-        assert_eq!(serialized[0..PARTIAL_FIXED_ENGINE_CFG_LEN], PARTIAL_FIXED_ENGINE_CFG);
+        assert_eq!(serialized[0..USED_ENGINE_CFG_LEN], PARTIAL_FIXED_ENGINE_CFG);
         // The rest should be zeroes
-        assert!(serialized.iter().skip(PARTIAL_FIXED_ENGINE_CFG_LEN).all(|item| *item == 0));
+        assert!(serialized.iter().skip(USED_ENGINE_CFG_LEN).all(|item| *item == 0));
     }
 
     #[test]
