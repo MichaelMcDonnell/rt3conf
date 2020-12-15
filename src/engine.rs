@@ -38,7 +38,11 @@ const PARTIAL_FIXED_ENGINE_CFG: [u8; USED_ENGINE_CFG_LEN] = [
 
 const SIZE_OF_BOOL: usize = 1; // std::mem::size_of<bool>() not working yet
 const SIZE_OF_U16: usize = 2; // std::mem::size_of<u16>() not working yet
+#[cfg(test)]
+const SIZE_OF_U32: usize = 4; // std::mem::size_of<u32>() not working yet
 
+#[cfg(test)]
+const HEADER_LEN: usize = SIZE_OF_U32;
 const DISABLE_ACCELERATED_MOUSE_LEN: usize = SIZE_OF_BOOL;
 #[cfg(test)]
 const FULL_SCREEN_LEN: usize = SIZE_OF_BOOL;
@@ -48,7 +52,8 @@ const WIDTH_LEN: usize = SIZE_OF_U16;
 const HEIGHT_LEN: usize = SIZE_OF_U16;
 
 // The field offsets were found through reverse engineering.
-const OFFSET_FIELD0: usize = 0;
+#[cfg(test)]
+const OFFSET_HEADER: usize = 0;
 const OFFSET_WIDTH: usize = 4;
 const OFFSET_FIELD1: usize = OFFSET_WIDTH + WIDTH_LEN;
 const OFFSET_HEIGHT: usize = 8;
@@ -61,12 +66,14 @@ const OFFSET_FIELD4: usize = OFFSET_DISABLE_ACCELERATED_MOUSE + DISABLE_ACCELERA
 const OFFSET_DISABLE_HARDWARE_TNL: usize = 196;
 const OFFSET_FIELD5: usize = OFFSET_DISABLE_HARDWARE_TNL + DISABLE_HARDWARE_TNL_LEN;
 
-const FIELD0_LEN: usize = OFFSET_WIDTH - OFFSET_FIELD0;
 const FIELD1_LEN: usize = OFFSET_HEIGHT - OFFSET_FIELD1;
 const FIELD2_LEN: usize = OFFSET_FULL_SCREEN - OFFSET_FIELD2;
 const FIELD3_LEN: usize = OFFSET_DISABLE_ACCELERATED_MOUSE - OFFSET_FIELD3;
 const FIELD4_LEN: usize = OFFSET_DISABLE_HARDWARE_TNL - OFFSET_FIELD4;
 const FIELD5_LEN: usize = ENGINE_CFG_LEN - OFFSET_FIELD5;
+
+#[cfg(test)]
+const HEADER: u32 = 0x00_00_04_1B;
 
 // Serde can by default only handle arrays with up to 32 elements. This adds
 // handling of arrays for the lengths we need.
@@ -80,7 +87,7 @@ big_array! { BigArray; FIELD3_LEN, FIELD5_LEN }
 #[derive(Serialize, Deserialize)]
 #[repr(C)]
 pub struct Engine {
-    field0: [u8; FIELD0_LEN],
+    header: u32,
     width: u16,
     field1: [u8; FIELD1_LEN],
     height: u16,
@@ -174,6 +181,8 @@ mod tests {
     fn deserialize_fixed() {
         let fixed_data = Engine::fixed_data();
         let engine: Engine = bincode::deserialize(&fixed_data[..]).unwrap();
+        assert_eq!(engine.header, HEADER);
+
         // You can check these values in the game's settings
         assert!(!engine.disable_accelerated_mouse);
         assert!(engine.font_shadows);
@@ -208,7 +217,7 @@ mod tests {
 
     #[test]
     fn field_ordering() {
-        assert!(OFFSET_FIELD0 < OFFSET_WIDTH);
+        assert!(OFFSET_HEADER < OFFSET_WIDTH);
         assert!(OFFSET_WIDTH < OFFSET_FIELD1);
         assert!(OFFSET_FIELD1 < OFFSET_HEIGHT);
         assert!(OFFSET_HEIGHT < OFFSET_FIELD2);
@@ -223,7 +232,7 @@ mod tests {
 
     #[test]
     fn field_lengths() {
-        assert_eq!(OFFSET_FIELD0 + FIELD0_LEN, OFFSET_WIDTH);
+        assert_eq!(OFFSET_HEADER + HEADER_LEN, OFFSET_WIDTH);
         assert_eq!(OFFSET_WIDTH + WIDTH_LEN, OFFSET_FIELD1);
         assert_eq!(OFFSET_FIELD1 + FIELD1_LEN, OFFSET_HEIGHT);
         assert_eq!(OFFSET_HEIGHT + HEIGHT_LEN, OFFSET_FIELD2);
@@ -240,7 +249,7 @@ mod tests {
     #[test]
     fn fields_total_length() {
         let field_lengths: Vec<usize> = vec![
-            FIELD0_LEN,
+            HEADER_LEN,
             WIDTH_LEN,
             FIELD1_LEN,
             HEIGHT_LEN,
