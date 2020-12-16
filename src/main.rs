@@ -32,10 +32,10 @@ struct Opt {
     /// Screen resolution height
     // The 'h' is already used by the help parameter.
     #[structopt(short = "y", long = "height", default_value = "600")]
-    height: u16,
+    height: u32,
     /// Screen resolution width
     #[structopt(short = "x", long = "width", default_value = "800")]
-    width: u16,
+    width: u32,
 }
 
 fn main() -> std::io::Result<()> {

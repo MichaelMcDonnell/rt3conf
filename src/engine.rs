@@ -37,25 +37,24 @@ const PARTIAL_FIXED_ENGINE_CFG: [u8; USED_ENGINE_CFG_LEN] = [
 ];
 
 const SIZE_OF_BOOL: usize = 1; // std::mem::size_of<bool>() not working yet
-const SIZE_OF_U16: usize = 2; // std::mem::size_of<u16>() not working yet
-#[cfg(test)]
 const SIZE_OF_U32: usize = 4; // std::mem::size_of<u32>() not working yet
 
 #[cfg(test)]
 const HEADER_LEN: usize = SIZE_OF_U32;
-const DISABLE_ACCELERATED_MOUSE_LEN: usize = SIZE_OF_BOOL;
+const HEIGHT_LEN: usize = SIZE_OF_U32;
+#[cfg(test)]
+const WIDTH_LEN: usize = SIZE_OF_U32;
 #[cfg(test)]
 const FULL_SCREEN_LEN: usize = SIZE_OF_BOOL;
 const FONT_SHADOWS_LEN: usize = SIZE_OF_BOOL;
+const DISABLE_ACCELERATED_MOUSE_LEN: usize = SIZE_OF_BOOL;
 const DISABLE_HARDWARE_TNL_LEN: usize = SIZE_OF_BOOL;
-const WIDTH_LEN: usize = SIZE_OF_U16;
-const HEIGHT_LEN: usize = SIZE_OF_U16;
 
 // The field offsets were found through reverse engineering.
 #[cfg(test)]
 const OFFSET_HEADER: usize = 0;
+#[cfg(test)]
 const OFFSET_WIDTH: usize = 4;
-const OFFSET_FIELD1: usize = OFFSET_WIDTH + WIDTH_LEN;
 const OFFSET_HEIGHT: usize = 8;
 const OFFSET_FIELD2: usize = OFFSET_HEIGHT + HEIGHT_LEN;
 const OFFSET_FULL_SCREEN: usize = 16;
@@ -66,7 +65,6 @@ const OFFSET_FIELD4: usize = OFFSET_DISABLE_ACCELERATED_MOUSE + DISABLE_ACCELERA
 const OFFSET_DISABLE_HARDWARE_TNL: usize = 196;
 const OFFSET_FIELD5: usize = OFFSET_DISABLE_HARDWARE_TNL + DISABLE_HARDWARE_TNL_LEN;
 
-const FIELD1_LEN: usize = OFFSET_HEIGHT - OFFSET_FIELD1;
 const FIELD2_LEN: usize = OFFSET_FULL_SCREEN - OFFSET_FIELD2;
 const FIELD3_LEN: usize = OFFSET_DISABLE_ACCELERATED_MOUSE - OFFSET_FIELD3;
 const FIELD4_LEN: usize = OFFSET_DISABLE_HARDWARE_TNL - OFFSET_FIELD4;
@@ -88,9 +86,8 @@ big_array! { BigArray; FIELD3_LEN, FIELD5_LEN }
 #[repr(C)]
 pub struct Engine {
     header: u32,
-    width: u16,
-    field1: [u8; FIELD1_LEN],
-    height: u16,
+    width: u32,
+    height: u32,
     field2: [u8; FIELD2_LEN],
     full_screen: bool,
     font_shadows: bool,
@@ -142,11 +139,11 @@ impl Engine {
         self.disable_hardware_tnl = disable_hardware_tnl;
     }
 
-    pub fn set_height(&mut self, height: u16) {
+    pub fn set_height(&mut self, height: u32) {
         self.height = height;
     }
 
-    pub fn set_width(&mut self, width: u16) {
+    pub fn set_width(&mut self, width: u32) {
         self.width = width;
     }
 }
@@ -218,9 +215,7 @@ mod tests {
     #[test]
     fn field_ordering() {
         assert!(OFFSET_HEADER < OFFSET_WIDTH);
-        assert!(OFFSET_WIDTH < OFFSET_FIELD1);
-        assert!(OFFSET_FIELD1 < OFFSET_HEIGHT);
-        assert!(OFFSET_HEIGHT < OFFSET_FIELD2);
+        assert!(OFFSET_WIDTH < OFFSET_HEIGHT);
         assert!(OFFSET_FIELD2 < OFFSET_FULL_SCREEN);
         assert!(OFFSET_FULL_SCREEN < OFFSET_FONT_SHADOWS);
         assert!(OFFSET_FONT_SHADOWS < OFFSET_FIELD3);
@@ -233,8 +228,7 @@ mod tests {
     #[test]
     fn field_lengths() {
         assert_eq!(OFFSET_HEADER + HEADER_LEN, OFFSET_WIDTH);
-        assert_eq!(OFFSET_WIDTH + WIDTH_LEN, OFFSET_FIELD1);
-        assert_eq!(OFFSET_FIELD1 + FIELD1_LEN, OFFSET_HEIGHT);
+        assert_eq!(OFFSET_WIDTH + WIDTH_LEN, OFFSET_HEIGHT);
         assert_eq!(OFFSET_HEIGHT + HEIGHT_LEN, OFFSET_FIELD2);
         assert_eq!(OFFSET_FIELD2 + FIELD2_LEN, OFFSET_FULL_SCREEN);
         assert_eq!(OFFSET_FULL_SCREEN + FULL_SCREEN_LEN, OFFSET_FONT_SHADOWS);
@@ -251,7 +245,6 @@ mod tests {
         let field_lengths: Vec<usize> = vec![
             HEADER_LEN,
             WIDTH_LEN,
-            FIELD1_LEN,
             HEIGHT_LEN,
             FIELD2_LEN,
             FULL_SCREEN_LEN,
