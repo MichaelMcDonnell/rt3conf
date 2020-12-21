@@ -36,46 +36,12 @@ const PARTIAL_FIXED_ENGINE_CFG: [u8; USED_ENGINE_CFG_LEN] = [
     0x00,
 ];
 
-const SIZE_OF_BOOL: usize = 1; // std::mem::size_of<bool>() not working yet
-const SIZE_OF_U32: usize = 4; // std::mem::size_of<u32>() not working yet
-
-#[cfg(test)]
-const HEADER_LEN: usize = SIZE_OF_U32;
-const HEIGHT_LEN: usize = SIZE_OF_U32;
-#[cfg(test)]
-const WIDTH_LEN: usize = SIZE_OF_U32;
-#[cfg(test)]
-const FULL_SCREEN_LEN: usize = SIZE_OF_BOOL;
-const FONT_SHADOWS_LEN: usize = SIZE_OF_BOOL;
-const DISABLE_ACCELERATED_MOUSE_LEN: usize = SIZE_OF_BOOL;
-const DISABLE_HARDWARE_TNL_LEN: usize = SIZE_OF_BOOL;
-
-// The field offsets were found through reverse engineering.
-#[cfg(test)]
-const OFFSET_HEADER: usize = 0;
-#[cfg(test)]
-const OFFSET_WIDTH: usize = 4;
-const OFFSET_HEIGHT: usize = 8;
-const OFFSET_FIELD2: usize = OFFSET_HEIGHT + HEIGHT_LEN;
-const OFFSET_FULL_SCREEN: usize = 16;
-const OFFSET_FONT_SHADOWS: usize = OFFSET_FULL_SCREEN + 1; // 17
-const OFFSET_FIELD3: usize = OFFSET_FONT_SHADOWS + FONT_SHADOWS_LEN;
-const OFFSET_DISABLE_ACCELERATED_MOUSE: usize = 184;
-const OFFSET_FIELD4: usize = OFFSET_DISABLE_ACCELERATED_MOUSE + DISABLE_ACCELERATED_MOUSE_LEN;
-const OFFSET_DISABLE_HARDWARE_TNL: usize = 196;
-const OFFSET_FIELD5: usize = OFFSET_DISABLE_HARDWARE_TNL + DISABLE_HARDWARE_TNL_LEN;
-
-const FIELD2_LEN: usize = OFFSET_FULL_SCREEN - OFFSET_FIELD2;
-const FIELD3_LEN: usize = OFFSET_DISABLE_ACCELERATED_MOUSE - OFFSET_FIELD3;
-const FIELD4_LEN: usize = OFFSET_DISABLE_HARDWARE_TNL - OFFSET_FIELD4;
-const FIELD5_LEN: usize = ENGINE_CFG_LEN - OFFSET_FIELD5;
-
 #[cfg(test)]
 const HEADER: u32 = 0x00_00_04_1B;
 
 // Serde can by default only handle arrays with up to 32 elements. This adds
 // handling of arrays for the lengths we need.
-big_array! { BigArray; FIELD3_LEN, FIELD5_LEN }
+big_array! { BigArray; 39, 779 }
 
 /// Contains the data for the engine.cfg file.
 ///
@@ -88,16 +54,54 @@ pub struct Engine {
     header: u32,
     width: u32,
     height: u32,
-    field2: [u8; FIELD2_LEN],
+    field0: [u8; 4],
     full_screen: bool,
     font_shadows: bool,
+    field1: [u8; 16],
+    anisotropic_filter: bool,
+    field2: [u8; 5],
+    anti_alias: bool,
+    field3: [u8; 3],
+    mipmapping_bias: u8,
+    mipmapping: u8,
+    field4: [u8; 4],
+    distance_fogging: bool,
+    field5: [u8; 2],
+    // FIXME: Something is off, u16 did not align correctly. Maybe it goes from
+    //        52 to 54?
+    gamma: [u8; 2],
+    field6: [u8; 26],
+    invert_camera: bool,
+    field7: [u8; 11],
+    draw_clouds: bool,
+    field8: [u8; 5],
+    ocean_waves: bool,
+    field9: u8,
+    water_reflections: bool,
+    field10: [u8; 14],
+    sound_volume: f32,
+    music_volume: f32,
+    voice_volume: f32,
+    sound_provider: u8,
+    field11: [u8; 3],
+    speaker_settings: u8,
+    field12: [u8; 3],
+    disable_safe_refresh_rate: bool,
     #[serde(with = "BigArray")]
-    field3: [u8; FIELD3_LEN],
+    field13: [u8; 39],
+    texture_detail: u8,
+    field14: [u8; 3],
+    disable_color_mouse_cursor: bool,
+    field15: [u8; 3],
     disable_accelerated_mouse: bool,
-    field4: [u8; FIELD4_LEN],
+    field16: [u8; 3],
+    grey_for_inactive_trains: bool,
+    field17: [u8; 7],
     disable_hardware_tnl: bool,
+    field18: [u8; 3],
+    color_adjustment: u8,
     #[serde(with = "BigArray")]
-    field5: [u8; FIELD5_LEN],
+    field19: [u8; 779],
 }
 
 impl Engine {
@@ -213,49 +217,61 @@ mod tests {
     }
 
     #[test]
-    fn field_ordering() {
-        assert!(OFFSET_HEADER < OFFSET_WIDTH);
-        assert!(OFFSET_WIDTH < OFFSET_HEIGHT);
-        assert!(OFFSET_FIELD2 < OFFSET_FULL_SCREEN);
-        assert!(OFFSET_FULL_SCREEN < OFFSET_FONT_SHADOWS);
-        assert!(OFFSET_FONT_SHADOWS < OFFSET_FIELD3);
-        assert!(OFFSET_FIELD3 < OFFSET_DISABLE_ACCELERATED_MOUSE);
-        assert!(OFFSET_DISABLE_ACCELERATED_MOUSE < OFFSET_FIELD4);
-        assert!(OFFSET_FIELD4 < OFFSET_DISABLE_HARDWARE_TNL);
-        assert!(OFFSET_DISABLE_HARDWARE_TNL < OFFSET_FIELD5);
+    fn size_of_engine_struct() {
+        assert_eq!(std::mem::size_of::<Engine>(), ENGINE_CFG_LEN);
     }
 
     #[test]
-    fn field_lengths() {
-        assert_eq!(OFFSET_HEADER + HEADER_LEN, OFFSET_WIDTH);
-        assert_eq!(OFFSET_WIDTH + WIDTH_LEN, OFFSET_HEIGHT);
-        assert_eq!(OFFSET_HEIGHT + HEIGHT_LEN, OFFSET_FIELD2);
-        assert_eq!(OFFSET_FIELD2 + FIELD2_LEN, OFFSET_FULL_SCREEN);
-        assert_eq!(OFFSET_FULL_SCREEN + FULL_SCREEN_LEN, OFFSET_FONT_SHADOWS);
-        assert_eq!(OFFSET_FONT_SHADOWS + FONT_SHADOWS_LEN, OFFSET_FIELD3);
-        assert_eq!(OFFSET_FIELD3 + FIELD3_LEN, OFFSET_DISABLE_ACCELERATED_MOUSE);
-        assert_eq!(OFFSET_DISABLE_ACCELERATED_MOUSE + DISABLE_ACCELERATED_MOUSE_LEN, OFFSET_FIELD4);
-        assert_eq!(OFFSET_FIELD4 + FIELD4_LEN, OFFSET_DISABLE_HARDWARE_TNL);
-        assert_eq!(OFFSET_DISABLE_HARDWARE_TNL + DISABLE_HARDWARE_TNL_LEN, OFFSET_FIELD5);
-        assert_eq!(OFFSET_FIELD5 + FIELD5_LEN, ENGINE_CFG_LEN);
-    }
-
-    #[test]
-    fn fields_total_length() {
-        let field_lengths: Vec<usize> = vec![
-            HEADER_LEN,
-            WIDTH_LEN,
-            HEIGHT_LEN,
-            FIELD2_LEN,
-            FULL_SCREEN_LEN,
-            FONT_SHADOWS_LEN,
-            FIELD3_LEN,
-            DISABLE_ACCELERATED_MOUSE_LEN,
-            FIELD4_LEN,
-            DISABLE_HARDWARE_TNL_LEN,
-            FIELD5_LEN,
-        ];
-        let total_len: usize = field_lengths.iter().sum();
-        assert_eq!(total_len, ENGINE_CFG_LEN)
+    fn field_offsets() {
+        // The field offsets were found through reverse engineering. I opened
+        // the settings, changed a value and noticed the difference in the file.
+        // This was repeated until I had gone through all the settings. Some of
+        // the settings are in the game.cfg file instead of the engine.cfg file.
+        assert_eq!(offset_of!(Engine, header), 0);
+        assert_eq!(offset_of!(Engine, width), 4);
+        assert_eq!(offset_of!(Engine, height), 8);
+        assert_eq!(offset_of!(Engine, field0), 12);
+        assert_eq!(offset_of!(Engine, full_screen), 16);
+        assert_eq!(offset_of!(Engine, font_shadows), 17);
+        assert_eq!(offset_of!(Engine, field1), 18);
+        assert_eq!(offset_of!(Engine, anisotropic_filter), 34);
+        assert_eq!(offset_of!(Engine, field2), 35);
+        assert_eq!(offset_of!(Engine, anti_alias), 40);
+        assert_eq!(offset_of!(Engine, field3), 41);
+        assert_eq!(offset_of!(Engine, mipmapping_bias), 44);
+        assert_eq!(offset_of!(Engine, mipmapping), 45);
+        assert_eq!(offset_of!(Engine, field4), 46);
+        assert_eq!(offset_of!(Engine, distance_fogging), 50);
+        assert_eq!(offset_of!(Engine, field5), 51);
+        assert_eq!(offset_of!(Engine, gamma), 53);
+        assert_eq!(offset_of!(Engine, field6), 55);
+        assert_eq!(offset_of!(Engine, invert_camera), 81);
+        assert_eq!(offset_of!(Engine, field7), 82);
+        assert_eq!(offset_of!(Engine, draw_clouds), 93);
+        assert_eq!(offset_of!(Engine, field8), 94);
+        assert_eq!(offset_of!(Engine, ocean_waves), 99);
+        assert_eq!(offset_of!(Engine, field9), 100);
+        assert_eq!(offset_of!(Engine, water_reflections), 101);
+        assert_eq!(offset_of!(Engine, field10), 102);
+        assert_eq!(offset_of!(Engine, sound_volume), 116);
+        assert_eq!(offset_of!(Engine, music_volume), 120);
+        assert_eq!(offset_of!(Engine, voice_volume), 124);
+        assert_eq!(offset_of!(Engine, sound_provider), 128);
+        assert_eq!(offset_of!(Engine, speaker_settings), 132);
+        assert_eq!(offset_of!(Engine, field12), 133);
+        assert_eq!(offset_of!(Engine, disable_safe_refresh_rate), 136);
+        assert_eq!(offset_of!(Engine, field13), 137);
+        assert_eq!(offset_of!(Engine, texture_detail), 176);
+        assert_eq!(offset_of!(Engine, field14), 177);
+        assert_eq!(offset_of!(Engine, disable_color_mouse_cursor), 180);
+        assert_eq!(offset_of!(Engine, field15), 181);
+        assert_eq!(offset_of!(Engine, disable_accelerated_mouse), 184);
+        assert_eq!(offset_of!(Engine, field16), 185);
+        assert_eq!(offset_of!(Engine, grey_for_inactive_trains), 188);
+        assert_eq!(offset_of!(Engine, field17), 189);
+        assert_eq!(offset_of!(Engine, disable_hardware_tnl), 196);
+        assert_eq!(offset_of!(Engine, field18), 197);
+        assert_eq!(offset_of!(Engine, color_adjustment), 200);
+        assert_eq!(offset_of!(Engine, field19), 201);
     }
 }
