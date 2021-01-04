@@ -135,10 +135,14 @@ pub struct Engine {
 }
 
 impl Engine {
+    /// Creates a new `Engine` with safe defaults (i.e. 800 x 600 screen
+    /// resolution and hardware texture and lighting off).
     pub fn new() -> Self {
         Default::default()
     }
 
+    /// Serializes the `Engine` struct to a vector of bytes that can then be
+    /// saved to a file.
     pub fn serialize(&self) -> Vec<u8> {
         bincode::serialize(&self).unwrap()
     }
@@ -171,6 +175,8 @@ impl Engine {
 }
 
 impl Default for Engine {
+    /// Creates a new `Engine` with safe defaults (i.e. 800 x 600 screen
+    /// resolution and hardware texture and lighting off).
     fn default() -> Self {
         Engine {
             header: DEFAULT_HEADER,
