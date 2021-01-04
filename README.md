@@ -1,9 +1,12 @@
 # rt3conf
 
-An *unofficial* tool for configuring Railroad Tycoon 3.
+The rt3conf program is an **unofficial** tool for configuring Railroad Tycoon 3.
+With it you can run the game at modern screen resolutions that are not possible
+to select in the settings. It can also be used to turn off settings that crash
+the game to the point where you cannot open the game to undo the setting.
 
-Railroad Tycoon is trademarked by Take-Two Interactive Software, Inc., and this
-software is not affiliated with them in any way.
+_Railroad Tycoon is trademarked by Take-Two Interactive Software, Inc., and this
+software is not affiliated with them in any way._
 
 ## Usage
 
