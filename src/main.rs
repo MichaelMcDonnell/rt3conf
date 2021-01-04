@@ -1,8 +1,6 @@
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-#[macro_use]
-extern crate serde_big_array;
 
 use std::fs::File;
 use std::io::prelude::*;

@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use serde_big_array::big_array;
+
 /// The engine.cfg file contains 980 bytes.
 const ENGINE_CFG_LEN: usize = 980;
 
