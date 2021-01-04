@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use serde::{Serialize, Deserialize};
 use serde_big_array::big_array;
 
 /// The engine.cfg file contains 980 bytes.
