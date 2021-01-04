@@ -16,7 +16,7 @@ configuration file with resolution set to 800 x 600 and hardware texture and
 lighting turned off:
 
 ```console
-C:\path-you-choose>rt3conf -x 1920 -y 1080
+C:\path-you-choose>rt3conf
 ```
 
 Note that hardware texture and lighting is turned off by default because it can
