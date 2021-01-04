@@ -3,8 +3,7 @@ use std::io::prelude::*;
 
 use structopt::StructOpt;
 
-mod engine;
-use engine::Engine;
+use rt3conf::Engine;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "rt3conf", about = "Create configuration files for the game Railroad Tycoon 3.")]
