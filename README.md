@@ -57,6 +57,28 @@ the [Rust](https://www.rust-lang.org/) programming language installed. Then the
 executable is placed in a directory that is part of the `PATH` environment
 variable, and you can run it from any directory.
 
+## Building
+
+If you want to build `rt3conf` from the source code then you first need to
+install the [Rust](https://www.rust-lang.org/) programming language. Then
+download the source code from GitHub or clone it with git. Finally open a
+terminal and use the `cargo` build command to build the source code:
+
+```console
+c:\src\rt3conf>cargo build --release
+```
+
+The binary is placed in the directory `target/release`.
+
+You can get Cargo to build and install the binary in a single step with the
+`install` command, for example:
+
+```console
+c:\src\rt3conf>cargo install --path .
+```
+
+The rt3conf binary is now added to the `PATH` and can be executed from anywhere.
+
 ## Reverse Engineering Fields
 
 The configuration files contain fields that control the configuration settings.
