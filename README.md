@@ -20,7 +20,7 @@ C:\path-you-choose>rt3conf
 ```
 
 Note that hardware texture and lighting is turned off by default because it can
-cause a crash on newer machines with nVidia graphics cards.
+cause a crash on newer machines with Nvidia graphics cards.
 
 The `engine.cfg` file should then be copied to where Railroad Tycoon 3 stores
 the configuration files, e.g.
