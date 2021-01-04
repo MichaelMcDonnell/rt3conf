@@ -1,10 +1,5 @@
-#![allow(dead_code)]
-
 use serde::{Serialize, Deserialize};
 use serde_big_array::big_array;
-
-/// The engine.cfg file contains 980 bytes.
-const ENGINE_CFG_LEN: usize = 980;
 
 const DEFAULT_HEADER: u32 = 0x00_00_04_1B;
 const DEFAULT_WIDTH: u32 = 800;
@@ -234,6 +229,8 @@ mod tests {
     use std::assert_eq;
     use super::*;
 
+    /// The engine.cfg file contains 980 bytes.
+    const ENGINE_CFG_LEN: usize = 980;
     // Only the first 201 bytes of the engine.cfg file seems to have anything
     // useful in it. The rest is zero.
     const USED_ENGINE_CFG_LEN: usize = 201;
