@@ -87,3 +87,16 @@ field does. The function of each field was reversed engineered by changing a
 setting in the game and then observing the changes to the files. I used
 [wxHexEditor](https://www.wxhexeditor.org/) to find the changes. It has a
 feature to compare the contents of two binary files.
+
+There are two configuration files `engine.cfg` and `game.cfg`. I have only
+implemented the settings in the `engine.cfg` but may also add `game.cfg` at some
+point. I have private notes about which settings are stored in `game.cfg` so I
+would know not to look for them in `engine.cfg`.
+
+There is clearly some data in `engine.cfg` that is not accessible from the
+game's settings. I suspect most of these settings were used by the developers
+and not meant for the users. The unaccessible settings are referred to as
+`fieldx` in the code (where `x` is a number). It should be possible to reverse
+engineer these last fields by changing a value at a time and opening the game
+to see the effect. Another option is to attach a debugger, watch the memory
+for reads and look at what happens in the disassembly.
