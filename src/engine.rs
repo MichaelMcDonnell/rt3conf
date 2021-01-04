@@ -337,6 +337,7 @@ mod tests {
 
     #[test]
     fn field_offsets() {
+        use memoffset::offset_of;
         // The field offsets were found through reverse engineering. I opened
         // the settings, changed a value and noticed the difference in the file.
         // This was repeated until I had gone through all the settings. Some of
