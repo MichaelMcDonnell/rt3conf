@@ -40,6 +40,20 @@ on your monitor.
 
 You can see all the available options by using the `-h` or `--help` option.
 
+## Installation
+
+You can download rt3conf from the
+[Release page](https://github.com/MichaelMcDonnell/rt3conf/releases).
+
+The easiest way to use the executable is to place it in the same folder as where
+you want the `engine.cfg` file generated. Otherwise you have to put it somewhere
+that is in your `PATH` environment variable.
+
+You can alternatively enter `cargo install rt3conf` in the terminal if you have
+the [Rust](https://www.rust-lang.org/) programming language installed. Then the
+executable is placed in a directory that is part of the `PATH` environment
+variable, and you can run it from any directory.
+
 ## Reverse Engineering Fields
 
 The configuration files contain fields that control the configuration settings.
