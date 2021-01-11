@@ -3,6 +3,11 @@ name = "rt3conf"
 version = "0.1.0"
 authors = ["Michael Mc Donnell <michael@mcdonnell.dk>"]
 edition = "2018"
+license-file = "LICENSE"
+keywords = ["rt3", "config", "settings"]
+categories = ["command-line-utilities", "config"]
+description = "An unofficial tool for configuring Railroad Tycoon 3."
+repository = "https://github.com/MichaelMcDonnell/rt3conf"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
