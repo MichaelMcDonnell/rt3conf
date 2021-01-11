@@ -6,7 +6,10 @@ use structopt::StructOpt;
 use rt3conf::Engine;
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "rt3conf", about = "Create configuration files for the game Railroad Tycoon 3.")]
+#[structopt(
+    name = "rt3conf",
+    about = "Create configuration files for the game Railroad Tycoon 3."
+)]
 struct Opt {
     /// Accelerated mouse [default: true]
     #[structopt(short = "a", long = "accelerated-mouse")]
