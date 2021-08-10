@@ -41,6 +41,10 @@ Note that the settings will say 640 x 480. It is often possible to verify that
 your monitor is running at the correct resolution by pressing one of the buttons
 on your monitor.
 
+The game does not handle ultra wide monitors well. I have tested it with NVIDIA
+surround at 3840 x 1200 and it looked blurry and stretched. Others have reported
+similar results.
+
 You can see all the available options by using the `-h` or `--help` option.
 
 ## Installation
